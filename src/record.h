@@ -47,13 +47,13 @@ typedef struct {
   char** col_names;
 } RowInformation;
 
-typedef struct {
+typedef struct { // sparse row to map the present columns in a row
   uint32_t id;
   uint8_t* present_map; 
-  void** column_values;  // Only values for present columns
+  void** column_values;
 } SparseRow;
 
-// TODO(#7): [Data-Structure] implement a better memory implementation, then a b-tree implementation
+// TODO(7): implement a better memory implementation than a b-tree implementation
 typedef struct {
   Pager* pager;
   uint32_t num_rows;
@@ -79,8 +79,7 @@ void pager_flush(Table* table);
 
 RowInformation* create_row_information(char* table_name, char* table_description);
 size_t col_size(ColumnType type);
-// If the stop_col argument is -1, then the function returns
-// the size of the entire row
+// if the stop_col argument is -1, then the function returns the size of the entire row
 ssize_t row_size(RowInformation* info, ssize_t stop_col);
 size_t row_col_size(ColumnType type);
 size_t rows_per_page(RowInformation* info);
@@ -88,7 +87,7 @@ size_t total_rows(RowInformation* info);
 
 ssize_t col_pos_by_name(RowInformation* info, char* name);
 
-// Reading row values functions
+// reading row values functions
 Row* read_row_data(Table* table, ssize_t row_pos);
 ssize_t col_offset(RowInformation* info, ssize_t col_pos);
 uint32_t read_row_id(RowInformation* info, Row* row);

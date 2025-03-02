@@ -75,13 +75,23 @@ void print_row(Table *table, ssize_t row_pos) {
 void serialize_row(Table *table, ssize_t row_id, Column **columns) {
   RowInformation *info = table->row_info;
   Row *row = read_row_data(table, row_id);
-
-  for (ssize_t i = 0; i < info->col_count; i++) {
+  
+  // for sparse storage, use a bitmap to track which columns are present
+  uint8_t* present_map = calloc((info->col_count + 7) / 8, sizeof(uint8_t));
+  present_map[0] |= 1;
+  store_row_id(table, row, columns[0]->id);
+  
+  // erialize only non-null columns
+  for (ssize_t i = 1; i < info->col_count; i++) {
     Column *cur = columns[i];
-
+    if (cur == NULL) continue;
+    
+    // (set appropriate bit for corresponding column)
+    present_map[i / 8] |= (1 << (i % 8));
+    
     switch (cur->type) {
     case ID:
-      store_row_id(table, row, cur->id);
+      // id alr handled
       break;
     case INT:
       store_row_int(table, row, cur->col_pos, cur->integer);
@@ -96,9 +106,14 @@ void serialize_row(Table *table, ssize_t row_id, Column **columns) {
       assert(0 && "Column has type not known");
       exit(EXIT_FAILURE);
     }
-
+    
     free(cur);
   }
+  
+  // Store presence map at beginning of row (would need changes to row format)
+  // This would require restructuring your row format
+  
+  free(present_map);
   free(row);
   free(columns);
 }
