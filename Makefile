@@ -16,3 +16,6 @@ debug: build-test
 
 rspec: buil
 	bundle exec rspec ./rspec/main_spec.rb
+
+clean:
+    rm -f $(EXEC)
